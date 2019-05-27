@@ -1,1 +1,0 @@
-Dataset provided at https://www.kaggle.com/alamson/safebooru#all_data.csv
