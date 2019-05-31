@@ -3,7 +3,7 @@ An attempt to generate industry-standard facial images for anime characters usin
 
 # Goal
 Recreate images similar to sample images  
-![Image of target samples](https://github.com/Pie31415/Anime_GAN/blob/master/dcgan-images-1/epoch%200.png)
+![Image of target samples](https://github.com/Pie31415/Anime_GAN/blob/master/dcgan-images/epoch%200.png)
 
 # The Data
 The current amount of training images is 6000 out of 60000
