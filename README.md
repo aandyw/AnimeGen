@@ -14,4 +14,4 @@ DCGAN is used
 # Results
 Tensorflow checkpoint at epoch 240  
 Epoch 225 outputs  
-![Epoch 225 sample images](https://github.com/Pie31415/Anime_GAN/blob/master/dcgan-images/epoch%20225.png)
+![Epoch 225 sample images](https://github.com/Pie31415/Anime_GAN/blob/master/images/dcgan-images/epoch%20225.png)
