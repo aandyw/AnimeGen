@@ -10,10 +10,10 @@ The current amount of training images is 6000
 
 # The Architecture
 ## DCGAN
-![dcgan gif](https://github.com/Pie31415/Anime_GAN/blob/master/imgs/dcgan_result.gif)
+**DCGAN**                          | **DCGAN + DRAGAN**
+:---:                                | :---:
+<img src="./imgs/dcgan_result.gif"> | <img src="./imgs/dcgan_dragan_result.gif">
 
-## DCGAN with DRAGAN loss function
-![dcgan dragan gif](https://github.com/Pie31415/Anime_GAN/blob/master/imgs/dcgan_dragan_result.gif)
 
-### LOSSES   
+### DCGAN + DRAGAN LOSSES   
 ![dcgan dragan losses](https://github.com/Pie31415/Anime_GAN/blob/master/imgs/dcgan_dragan_losses.png)
