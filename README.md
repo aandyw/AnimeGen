@@ -3,15 +3,17 @@ An attempt to generate industry-standard facial images for anime characters usin
 
 # Goal
 Recreate images similar to sample images  
-![Image of target samples](https://github.com/Pie31415/Anime_GAN/blob/master/imgs/epoch%200.png)
+![Image of target samples](https://github.com/Pie31415/Anime_GAN/blob/master/imgs/goal.png)
 
 # The Data
 The current amount of training images is 6000
 
 # The Architecture
-DCGAN is used
+## DCGAN
+**DCGAN**                          | **DCGAN + DRAGAN**
+:---:                                | :---:
+<img src="./imgs/dcgan_result.gif"> | <img src="./imgs/dcgan_dragan_result.gif">
 
-# Results
-Tensorflow checkpoint at epoch 240  
-Epoch 225 outputs  
-![Epoch 225 sample images](https://github.com/Pie31415/Anime_GAN/blob/master/imgs/epoch%20225.png)
+
+### DCGAN + DRAGAN LOSSES   
+![dcgan dragan losses](https://github.com/Pie31415/Anime_GAN/blob/master/imgs/dcgan_dragan_losses.png)
