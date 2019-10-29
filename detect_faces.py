@@ -28,7 +28,8 @@ def detect(path, filename, scaleFactor=1.5, cascade_file='cascade/lbpcascade_ani
             try:
                 roi = image[y1:y2, x1:x2]
                 roi = cv2.resize(roi, (128, 128))
-                cv2.imwrite('dataset/scaled_faces/{}-{}.jpg'.format(filename, i), roi)
+                cv2.imwrite(
+                    'dataset/scaled_faces/{}-{}.jpg'.format(filename, i), roi)
                 print('success in scaling {}-{}.jpg'.format(filename, i))
             except Exception:
                 print('failure in scaling {}-{}.jpg'.format(filename, i))
