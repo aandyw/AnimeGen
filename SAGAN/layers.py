@@ -3,12 +3,56 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-def conv1x1(input_size, output_size):
-    return nn.Conv2d(input_size, output_size,
-                     kernel_size=1, stride=1, padding=0, dilation=1, bias=False)
+##################################################################################
+# Layers
+##################################################################################
+def conv1x1(in_channels, out_channels):
+    return nn.Conv2d(in_channels, out_channels,
+                     kernel_size=1, stride=1, padding=0, dilation=1, bias=True)
 
 
+# discriminator
+def conv(in_channels, out_channels, kernel_size, stride=1, padding=0, bias=True):
+    return nn.Conv2d(in_channels, out_channels,
+                     kernel_size=kernel_size, stride=stride, padding=padding, bias=bias)
+
+
+# generator
+def deconv(in_channels, out_channels, kernel_size, stride=1, padding=0, bias=True):
+    return nn.ConvTranspose2d(in_channels, out_channels,
+                              kernel_size=kernel_size, stride=stride, padding=padding, bias=bias)
+
+
+##################################################################################
+# Activation Functions
+##################################################################################
+def lrelu(negative_slope=0.1):
+    return nn.LeakyReLU(negative_slope)
+
+
+def relu():
+    return nn.ReLU()
+
+
+def tanh():
+    return nn.Tanh()
+
+
+##################################################################################
+# Normalization Functions
+##################################################################################
+def batch_norm(num_features, eps=1e-05, momentum=0.1):
+    return nn.BatchNorm2d(num_features, eps, momentum)
+
+
+def spectral_norm(module):
+    return nn.utils.spectral_norm(module)
+
+
+##################################################################################
+# Self Attention
 # https://arxiv.org/pdf/1805.08318.pdf
+##################################################################################
 class SelfAttn(nn.Module):
     """ Self attention layer """
 
@@ -36,16 +80,16 @@ class SelfAttn(nn.Module):
         b, c, width, height = x.size()
         N = width*height
         f = self.f(x).view(b, -1, N).permute(0, 2, 1)  # b*c*n -> b*n*c
-        g = self.g(x).view(b, -1, N) # b*c*n
-        h = self.h(x).view(b, -1, N) # b*c*n
+        g = self.g(x).view(b, -1, N)  # b*c*n
+        h = self.h(x).view(b, -1, N)  # b*c*n
 
         # f (b x n x c) tensor, g (b x c x n) tensor
         # out tensor (b x n x n)
         transpose = torch.bmn(f, g)  # matmul
-        attention = self.softmax(transpose).permute(0, 2, 1)  # b*n*n
+        beta = self.softmax(transpose).permute(0, 2, 1)  # b*n*n
 
-        out = torch.bmn(h, attention)
+        out = torch.bmn(h, beta)
         out = out.view(b, c, width, height)
 
         out = self.gamma*out + x
-        return out, attention
+        return out, beta
