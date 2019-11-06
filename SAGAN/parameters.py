@@ -10,7 +10,7 @@ def get_parameters():
     # number of workers for dataloader
     parser.add_argument('--num_workers', type=int, default=2)
     # batch size for training
-    parser.add_argument('--batch_size', type=int, default=64)
+    parser.add_argument('--batch_size', type=int, default=8)
     # spatial size of training images
     parser.add_argument('--imsize', type=int, default=64)
     # channels of training images
@@ -22,7 +22,7 @@ def get_parameters():
     # size of feature maps in disc
     parser.add_argument('--ndf', type=int, default=64)
     # number of training epochs
-    parser.add_argument('--epoch', type=int, default=1000000)
+    parser.add_argument('--total_steps', type=int, default=1000000)
     # disc iterations
     parser.add_argument('--d_iters', type=int, default=5)
     # gen learning rate

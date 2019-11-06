@@ -1,12 +1,14 @@
-from parameters import *
+import numpy as np
+import matplotlib.pyplot as plt
 
 import torch.utils.data
 import torchvision.datasets as dset
 import torchvision.transforms as transforms
 import torchvision.utils as vutils
 
-import numpy as np
-import matplotlib.pyplot as plt
+from parameters import *
+from sagan import SAGAN
+
 
 
 def main(configs):
@@ -37,6 +39,10 @@ def main(configs):
         plt.imshow(np.transpose(vutils.make_grid(real_batch[0].to(device)[
             :64], padding=2, normalize=True).cpu(), (1, 2, 0)))
         plt.show()
+
+    
+    model = SAGAN(dataloader, configs)
+    model.train()
 
 
 if __name__ == "__main__":

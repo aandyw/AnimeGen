@@ -3,17 +3,17 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 
-from SAGAN.layers import conv
-from SAGAN.layers import lrelu, relu, tanh
-from SAGAN.layers import batch_norm, spectral_norm
-from SAGAN.layers import SelfAttn
+from layers import conv
+from layers import lrelu, relu, tanh
+from layers import batch_norm, spectral_norm
+from layers import SelfAttn
 
 
 class Discriminator(nn.Module):
     """SAGAN Discriminator"""
 
     def __init__(self, batch_size=64, image_size=64, conv_dim=64):
-        super(self.__class__.__name__, self).__init__()
+        super(Discriminator, self).__init__()
 
         layer1 = []
         layer2 = []
