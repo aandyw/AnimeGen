@@ -22,6 +22,8 @@ class Discriminator(nn.Module):
         output = []
 
         # layer 1
+
+        # 3 -> 64
         layer1.append(spectral_norm(
             conv(3, conv_dim, kernel_size=4, stride=2, padding=1)))
         layer1.append(lrelu())
@@ -30,6 +32,7 @@ class Discriminator(nn.Module):
         input_dim = conv_dim
         output_dim = input_dim*2
 
+        # 64 -> 128
         layer2.append(spectral_norm(
             conv(input_dim, output_dim, kernel_size=4, stride=2, padding=1)))
         layer2.append(lrelu())
@@ -38,6 +41,7 @@ class Discriminator(nn.Module):
         input_dim = output_dim
         output_dim = input_dim*2
 
+        # 128 -> 256
         layer3.append(spectral_norm(
             conv(input_dim, output_dim, kernel_size=4, stride=2, padding=1)))
         layer3.append(lrelu())
@@ -46,6 +50,7 @@ class Discriminator(nn.Module):
         input_dim = output_dim
         output_dim = input_dim*2
 
+        # 256 -> 512
         layer4.append(spectral_norm(
             conv(input_dim, output_dim, kernel_size=4, stride=2, padding=1)))
         layer4.append(lrelu())

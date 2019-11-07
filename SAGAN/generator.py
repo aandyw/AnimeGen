@@ -22,10 +22,11 @@ class Generator(nn.Module):
         output = []
 
         # layer 1
-        layer_num = int(np.log2(image_size)) - 3
-        mult = 2 ** layer_num
-        output_dim = conv_dim*mult
+        layer_num = int(np.log2(image_size)) - 3 # 3
+        mult = 2 ** layer_num # 8
+        output_dim = conv_dim*mult # 512
 
+        # 100 -> 512
         layer1.append(spectral_norm(deconv(z_dim, output_dim, kernel_size=4)))
         layer1.append(batch_norm(output_dim))
         layer1.append(relu())
@@ -34,15 +35,7 @@ class Generator(nn.Module):
         input_dim = output_dim
         output_dim = int(input_dim / 2)
 
-        layer2.append(spectral_norm(
-            deconv(input_dim, output_dim, kernel_size=4, stride=2, padding=1)))
-        layer2.append(batch_norm(output_dim))
-        layer2.append(relu())
-
-        # layer 2
-        input_dim = output_dim
-        output_dim = int(input_dim / 2)
-
+        # 512 -> 256
         layer2.append(spectral_norm(
             deconv(input_dim, output_dim, kernel_size=4, stride=2, padding=1)))
         layer2.append(batch_norm(output_dim))
@@ -52,6 +45,7 @@ class Generator(nn.Module):
         input_dim = output_dim
         output_dim = int(input_dim / 2)
 
+        # 256 -> 128
         layer3.append(spectral_norm(
             deconv(input_dim, output_dim, kernel_size=4, stride=2, padding=1)))
         layer3.append(batch_norm(output_dim))
@@ -61,6 +55,7 @@ class Generator(nn.Module):
         input_dim = output_dim
         output_dim = int(input_dim / 2)
 
+        # 128 -> 64
         layer4.append(spectral_norm(
             deconv(input_dim, output_dim, kernel_size=4, stride=2, padding=1)))
         layer4.append(batch_norm(output_dim))
@@ -69,6 +64,7 @@ class Generator(nn.Module):
         # output layer
         input_dim = output_dim
 
+        # 64 -> 3
         output.append(deconv(input_dim, out_channels=3,
                              kernel_size=4, stride=2, padding=1))
         output.append(tanh())
@@ -76,16 +72,16 @@ class Generator(nn.Module):
         self.l1 = nn.Sequential(*layer1)
         self.l2 = nn.Sequential(*layer2)
         self.l3 = nn.Sequential(*layer3)
-        self.attn1 = SelfAttn(64)
+        self.attn1 = SelfAttn(128)
         self.l4 = nn.Sequential(*layer4)
-        self.attn2 = SelfAttn(32)
+        self.attn2 = SelfAttn(64)
         self.output = nn.Sequential(*output)
 
     def forward(self, z):
-        z = z.view(z.size(0), z.size(1), 1, 1)
+        z = z.view(z.size(0), z.size(1), 1, 1) # [b, ]
         out = self.l1(z)
         out = self.l2(out)
-        out = self.l3(out) # [64, 64, 32, 32]
+        out = self.l3(out) # [b, 64, 32, 32]
         out, b1 = self.attn1(out)
         out = self.l4(out)
         out, b2 = self.attn2(out)

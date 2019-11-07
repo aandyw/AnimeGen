@@ -98,6 +98,11 @@ class SelfAttn(nn.Module):
 ##################################################################################
 # Utilities
 ##################################################################################
+def parameters(network):
+    """Parameters in model"""
+    params = list(p.numel() for p in network.parameters())
+    return sum(params)
+
 def tensor2var(x, grad=False):
     """Tensor to Variable"""
     if torch.cuda.is_available():

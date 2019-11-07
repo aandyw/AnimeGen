@@ -46,16 +46,21 @@ class SAGAN():
         self.d_opt = optim.Adam(filter(
             lambda p: p.requires_grad, self.D.parameters()), self.d_lr, [self.beta1, self.beta2])
 
+        print("Generator Parameters: ", parameters(self.G))
         print(self.G)
+        print()
+        print("Discriminator Parameters: ", parameters(self.D))
         print(self.D)
 
     def train(self):
         data_iter = iter(self.data_loader)
         step_per_epoch = len(self.data_loader)
+        epochs = self.total_steps/step_per_epoch
         
         # fixed z for sampling generator images
         fixed_z = tensor2var(torch.randn(self.batch_size, self.nz))
 
+        print("Initiating Training")
         start_time = time.time()
         for step in range(self.total_steps):
             # train layers
@@ -79,27 +84,29 @@ class SAGAN():
             g_loss_fake = loss_hinge_gen(d_fake)
 
             # backward + optimize
-            self.d_optimizer.zero_grad()
-            self.g_optimizer.zero_grad()
-            d_loss.backward()
+            self.d_opt.zero_grad()
+            self.g_opt.zero_grad()
+            d_loss.backward(retain_graph=True)
             self.d_opt.step()
+
+            self.d_opt.zero_grad()
+            self.g_opt.zero_grad()
             g_loss_fake.backward()
             self.g_opt.step()
 
-            # sample images
-            if (step+1) % 5 == 0:
+            if (step+1) % 50 == 0:
                 elapsed = time.time() - start_time
                 elapsed = str(datetime.timedelta(seconds=elapsed))
-                print("Elapsed [{}], G_step [{}/{}], D_step[{}/{}], d_out_real: {:.4f}, "
-                      " ave_gamma_l3: {:.4f}, ave_gamma_l4: {:.4f}".
-                      format(elapsed, step + 1, self.total_step, (step + 1),
-                             self.total_step , d_loss_real.data[0],
-                             self.G.attn1.gamma.mean().data[0], self.G.attn2.gamma.mean().data[0] ))
-
-            if (step+1) % 10 == 0:
+                print("Elapsed [{}], G_step [{}/{}], D_step[{}/{}], d_loss_real: {:.4f}, "
+                      " ave_gamma_2: {:.4f}, ave_gamma_2: {:.4f}".
+                      format(elapsed, step + 1, self.total_steps, (step + 1),
+                             self.total_steps , d_loss_real,
+                             self.G.attn1.gamma.mean(), self.G.attn2.gamma.mean()))
+            # sample images
+            if (step+1) % 200 == 0:
                 fake_images,_,_ = self.G(fixed_z)
                 fake_images = denorm(fake_images.data)
-                save_image(fake_images, "./samples/")
+                save_image(fake_images, "./samples/{}.png".format(step+1))
 
 
 
