@@ -79,8 +79,7 @@ class SelfAttn(nn.Module):
         """
         b, c, width, height = x.size()
         N = width*height
-        f = self.f(x).view(b, -1, N)
-        f = f.permute(0, 2, 1)  # b*c*n -> b*n*c
+        f = self.f(x).view(b, -1, N).permute(0, 2, 1)  # b*c*n -> b*n*c
         g = self.g(x).view(b, -1, N)  # b*c*n
         h = self.h(x).view(b, -1, N)  # b*c*n
 
@@ -98,10 +97,13 @@ class SelfAttn(nn.Module):
 ##################################################################################
 # Utilities
 ##################################################################################
+
+
 def parameters(network):
     """Parameters in model"""
     params = list(p.numel() for p in network.parameters())
     return sum(params)
+
 
 def tensor2var(x, grad=False):
     """Tensor to Variable"""
@@ -109,12 +111,15 @@ def tensor2var(x, grad=False):
         x = x.cuda()
     return torch.autograd.Variable(x, requires_grad=grad)
 
+
 def var2tensor(x):
     """Variable to Tensor"""
     return x.data.cpu()
 
+
 def var2numpy(x):
     return x.data.cpu().numpy()
+
 
 def denorm(x):
     """Denormalize Images"""

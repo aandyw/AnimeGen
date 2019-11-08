@@ -57,6 +57,8 @@ class Discriminator(nn.Module):
 
         # output layer
         input_dim = input_dim*2
+
+        # 512 -> 1
         output.append(conv(input_dim, 1, kernel_size=4))
 
         self.l1 = nn.Sequential(*layer1)

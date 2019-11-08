@@ -25,6 +25,8 @@ def get_parameters():
     parser.add_argument('--total_steps', type=int, default=1000000)
     # disc iterations
     parser.add_argument('--d_iters', type=int, default=5)
+    # gen iterations
+    parser.add_argument('--g_iters', type=int, default=1)
     # gen learning rate
     parser.add_argument('--g_lr', type=float, default=0.0001)
     # disc learning rate

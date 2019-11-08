@@ -22,9 +22,9 @@ class Generator(nn.Module):
         output = []
 
         # layer 1
-        layer_num = int(np.log2(image_size)) - 3 # 3
-        mult = 2 ** layer_num # 8
-        output_dim = conv_dim*mult # 512
+        layer_num = int(np.log2(image_size)) - 3  # 3
+        mult = 2 ** layer_num  # 8
+        output_dim = conv_dim*mult  # 512
 
         # 100 -> 512
         layer1.append(spectral_norm(deconv(z_dim, output_dim, kernel_size=4)))
@@ -78,13 +78,13 @@ class Generator(nn.Module):
         self.output = nn.Sequential(*output)
 
     def forward(self, z):
-        z = z.view(z.size(0), z.size(1), 1, 1) # [b, ]
-        out = self.l1(z)
-        out = self.l2(out)
-        out = self.l3(out) # [b, 64, 32, 32]
+        z = z.view(z.size(0), z.size(1), 1, 1)  # [b,100]->[b,100,1,1]
+        out = self.l1(z)  # [b,100,1,1]->[b,512,4,4]
+        out = self.l2(out)  # [b,512,4,4]->[b,256,8,8]
+        out = self.l3(out)  # [b,256,8,8]->[b,128,16,16]
         out, b1 = self.attn1(out)
-        out = self.l4(out)
+        out = self.l4(out)  # [b,128,16,16]->[b,64,32,32]
         out, b2 = self.attn2(out)
-        out = self.output(out)
+        out = self.output(out)  # [b,64,32,32]->[b,3,64,64]
 
         return out, b1, b2

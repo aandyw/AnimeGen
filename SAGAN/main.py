@@ -10,7 +10,6 @@ from parameters import *
 from sagan import SAGAN
 
 
-
 def main(configs):
 
     # create the anime faces dataset
@@ -40,7 +39,6 @@ def main(configs):
             :64], padding=2, normalize=True).cpu(), (1, 2, 0)))
         plt.show()
 
-    
     model = SAGAN(dataloader, configs)
     model.train()
 

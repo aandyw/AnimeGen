@@ -37,7 +37,8 @@ class SAGAN():
 
     def build_model(self):
         # initialize Generator and Discriminator
-        self.G = Generator(self.batch_size, self.imsize, self.nz, self.ngf).cuda()
+        self.G = Generator(self.batch_size, self.imsize,
+                           self.nz, self.ngf).cuda()
         self.D = Discriminator(self.batch_size, self.imsize, self.ndf).cuda()
 
         # optimizers
@@ -53,67 +54,59 @@ class SAGAN():
         print(self.D)
 
     def train(self):
-        data_iter = iter(self.data_loader)
         step_per_epoch = len(self.data_loader)
-        epochs = self.total_steps/step_per_epoch
-        
+        epochs = int(self.total_steps/step_per_epoch)
+
         # fixed z for sampling generator images
         fixed_z = tensor2var(torch.randn(self.batch_size, self.nz))
 
         print("Initiating Training")
+        print("Epochs: {}, Total Steps: {}, Steps/Epoch: {}".format(
+            epochs, self.total_steps, step_per_epoch))
         start_time = time.time()
-        for step in range(self.total_steps):
-            # train layers
-            self.D.train()
-            self.G.train()
+        for epoch in range(epochs):
+            print("Epoch {}".format(epoch+1))
+            data_iter = iter(self.data_loader)
 
-            # real and fake samples
-            real_images, _ = next(data_iter)
-            real_images = tensor2var(real_images)
-            z = tensor2var(torch.randn(real_images.size(0), self.nz))
-            fake_images, g_beta1, g_beta2 = self.G(z)
+            for step in range(step_per_epoch):
+                self.d_opt.zero_grad()
+                self.g_opt.zero_grad()
+                # train layers
+                self.D.train()
+                self.G.train()
 
-            # compute hinge loss for discriminator
-            d_real, dr_beta1, dr_beta2 = self.D(real_images)
-            d_fake, df_beta1, df_beta2 = self.D(real_images)
+                # real and fake samples
+                real_images, _ = next(data_iter)
+                real_images = tensor2var(real_images)
+                z = tensor2var(torch.randn(real_images.size(0), self.nz))
+                fake_images, g_beta1, g_beta2 = self.G(z)
 
-            d_loss_real, d_loss_fake = loss_hinge_dis(d_real, d_fake)
-            d_loss = d_loss_real + d_loss_fake
+                # compute hinge loss for discriminator
+                d_real, dr_beta1, dr_beta2 = self.D(real_images)
+                d_fake, df_beta1, df_beta2 = self.D(fake_images)
 
-            # compute hinge loss for generator
-            g_loss_fake = loss_hinge_gen(d_fake)
+                d_loss_real, d_loss_fake = loss_hinge_dis(d_real, d_fake)
+                d_loss = d_loss_real + d_loss_fake
 
-            # backward + optimize
-            self.d_opt.zero_grad()
-            self.g_opt.zero_grad()
-            d_loss.backward(retain_graph=True)
-            self.d_opt.step()
+                # compute hinge loss for generator
+                g_loss_fake = loss_hinge_gen(d_fake)
 
-            self.d_opt.zero_grad()
-            self.g_opt.zero_grad()
-            g_loss_fake.backward()
-            self.g_opt.step()
+                # backward + optimize
+                d_loss.backward(retain_graph=True)
+                self.d_opt.step()
 
-            if (step+1) % 50 == 0:
-                elapsed = time.time() - start_time
-                elapsed = str(datetime.timedelta(seconds=elapsed))
-                print("Elapsed [{}], G_step [{}/{}], D_step[{}/{}], d_loss_real: {:.4f}, "
-                      " ave_gamma_2: {:.4f}, ave_gamma_2: {:.4f}".
-                      format(elapsed, step + 1, self.total_steps, (step + 1),
-                             self.total_steps , d_loss_real,
-                             self.G.attn1.gamma.mean(), self.G.attn2.gamma.mean()))
+                g_loss_fake.backward()
+                self.g_opt.step()
+
+                if (step+1) % int(step_per_epoch/10) == 0:
+                    elapsed = time.time() - start_time
+                    elapsed = str(datetime.timedelta(seconds=elapsed))
+                    print("Elapsed [{}], Epoch:[{}/{}], G_step [{}/{}], D_step[{}/{}], d_loss_real: {:.4f}, "
+                          " ave_gamma_2: {:.4f}, ave_gamma_2: {:.4f}".
+                          format(elapsed, epoch+1, epochs, step + 1, self.total_steps, (step + 1),
+                                 self.total_steps, d_loss_real,
+                                 torch.mean(g_beta1), torch.mean(g_beta2)))
             # sample images
-            if (step+1) % 200 == 0:
-                fake_images,_,_ = self.G(fixed_z)
-                fake_images = denorm(fake_images.data)
-                save_image(fake_images, "./samples/{}.png".format(step+1))
-
-
-
-
-
-
-
-
-
-
+            fake_images, _, _ = self.G(fixed_z)
+            fake_images = denorm(fake_images.data)
+            save_image(fake_images, "./samples/{}.png".format(epoch+1))
