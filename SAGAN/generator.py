@@ -82,9 +82,9 @@ class Generator(nn.Module):
         out = self.l1(z)  # [b,100,1,1]->[b,512,4,4]
         out = self.l2(out)  # [b,512,4,4]->[b,256,8,8]
         out = self.l3(out)  # [b,256,8,8]->[b,128,16,16]
-        out, b1 = self.attn1(out)
+        out = self.attn1(out)
         out = self.l4(out)  # [b,128,16,16]->[b,64,32,32]
-        out, b2 = self.attn2(out)
+        out = self.attn2(out)
         out = self.output(out)  # [b,64,32,32]->[b,3,64,64]
 
-        return out, b1, b2
+        return out
