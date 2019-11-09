@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -8,6 +9,11 @@ import torchvision.utils as vutils
 
 from parameters import *
 from sagan import SAGAN
+
+
+def make_folder(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
 
 
 def main(configs):
@@ -38,6 +44,11 @@ def main(configs):
         plt.imshow(np.transpose(vutils.make_grid(real_batch[0].to(device)[
             :64], padding=2, normalize=True).cpu(), (1, 2, 0)))
         plt.show()
+
+    # create folders to hold model, losses, and sample images
+    make_folder(configs.model_path)
+    make_folder(configs.log_path)
+    make_folder(configs.sample_path)
 
     model = SAGAN(dataloader, configs)
     model.train()

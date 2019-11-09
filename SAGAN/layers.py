@@ -93,3 +93,50 @@ class SelfAttn(nn.Module):
 
         out = self.gamma*out + x
         return out
+
+
+##################################################################################
+# Loss Functions
+##################################################################################
+def loss_hinge_dis(d_real, d_fake):
+    """Hinge loss for discriminator"""
+    d_loss_real = torch.mean(F.relu(1.0 - d_real))
+    d_loss_fake = torch.mean(F.relu(1.0 + d_fake))
+    return d_loss_real, d_loss_fake
+
+
+def loss_hinge_gen(d_fake):
+    """Hinge loss for generator"""
+    g_loss_fake = -torch.mean(d_fake)
+    return g_loss_fake
+
+
+##################################################################################
+# Utilities
+##################################################################################
+def parameters(network):
+    """Parameters in model"""
+    params = list(p.numel() for p in network.parameters())
+    return sum(params)
+
+
+def tensor2var(x, grad=False):
+    """Tensor to Variable"""
+    if torch.cuda.is_available():
+        x = x.cuda()
+    return torch.autograd.Variable(x, requires_grad=grad)
+
+
+def var2tensor(x):
+    """Variable to Tensor"""
+    return x.data.cpu()
+
+
+def var2numpy(x):
+    return x.data.cpu().numpy()
+
+
+def denorm(x):
+    """Denormalize Images"""
+    out = (x + 1) / 2
+    return out.clamp_(0, 1)

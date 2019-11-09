@@ -39,8 +39,14 @@ def get_parameters():
 
     # PATHS
     parser.add_argument('--image_path', type=str, default="../data")
+    parser.add_argument('--model_path', type=str, default="./models")
+    parser.add_argument('--log_path', type=str, default="./logs")
+    parser.add_argument('--sample_path', type=str, default="./samples")
 
     # DATA
     parser.add_argument('--visualize', type=bool, default=False)
+
+    # STEPS
+    parser.add_argument('--log_step', int=int, default=10)
 
     return parser.parse_args()
