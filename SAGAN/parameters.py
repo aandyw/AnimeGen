@@ -22,7 +22,7 @@ def get_parameters():
     # size of feature maps in disc
     parser.add_argument('--ndf', type=int, default=64)
     # number of training epochs
-    parser.add_argument('--total_steps', type=int, default=20000)
+    parser.add_argument('--total_steps', type=int, default=150000)
     # disc iterations
     parser.add_argument('--d_iters', type=int, default=1)
     # gen iterations
@@ -37,10 +37,12 @@ def get_parameters():
     parser.add_argument('--beta1', type=float, default=0.0)
     parser.add_argument('--beta2', type=float, default=0.9)
 
+    parser.add_argument('--train', type=bool, default=False)
+    parser.add_argument('--plot', type=bool, default=True)
+
     # PATHS
     parser.add_argument('--image_path', type=str, default="../data")
     parser.add_argument('--model_path', type=str, default="./models")
-    parser.add_argument('--log_path', type=str, default="./logs")
     parser.add_argument('--sample_path', type=str, default="./samples")
 
     # DATA
@@ -51,6 +53,6 @@ def get_parameters():
     parser.add_argument('--save_epoch', type=int, default=3)
 
     # PRETRAIN
-    parser.add_argument('--pretrained_model', type=int, default=None)
+    parser.add_argument('--pretrained_model', type=int, default=222)
 
     return parser.parse_args()

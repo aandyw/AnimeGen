@@ -47,11 +47,14 @@ def main(configs):
 
     # create folders to hold model, losses, and sample images
     make_folder(configs.model_path)
-    make_folder(configs.log_path)
     make_folder(configs.sample_path)
 
     model = SAGAN(dataloader, configs)
-    model.train()
+    if configs.train:
+        model.train()
+
+    if configs.plot:
+        model.plot()
 
 
 if __name__ == "__main__":

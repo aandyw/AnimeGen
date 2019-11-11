@@ -39,7 +39,6 @@ class SAGAN():
         self.log_step = configs.log_step
         self.save_epoch = configs.save_epoch
         self.model_path = configs.model_path
-        self.log_path = configs.log_path
         self.sample_path = configs.sample_path
 
         # pretrained
@@ -262,3 +261,6 @@ class SAGAN():
                 }, os.path.join(self.model_path, "{}_sagan.pth".format(epoch+1)))
 
                 print("Saving models (epoch {})..!".format(epoch+1))
+
+    def plot(self):
+        pass
