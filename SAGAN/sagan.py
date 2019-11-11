@@ -2,6 +2,7 @@ import os
 import time
 import datetime
 import numpy as np
+from statistics import mean
 
 import torch
 import torch.nn as nn
@@ -36,6 +37,7 @@ class SAGAN():
 
         # model logging and saving
         self.log_step = configs.log_step
+        self.save_epoch = configs.save_epoch
         self.model_path = configs.model_path
         self.log_path = configs.log_path
         self.sample_path = configs.sample_path
@@ -43,17 +45,19 @@ class SAGAN():
         # pretrained
         self.pretrained_model = configs.pretrained_model
 
+        # building
         self.build_model()
 
         # archieve of all losses
-        self.ave_d_loss = []
-        self.ave_dr_loss = []
-        self.ave_df_loss = []
-        self.ave_g_loss = []
-        self.ave_g_gamma1 = []
-        self.ave_g_gamma2 = []
+        self.ave_d_losses = []
+        self.ave_d_losses_real = []
+        self.ave_d_losses_fake = []
         self.ave_d_gamma1 = []
         self.ave_d_gamma2 = []
+
+        self.ave_g_losses = []
+        self.ave_g_gamma1 = []
+        self.ave_g_gamma2 = []
 
         if self.pretrained_model:
             self.load_pretrained()
@@ -90,12 +94,14 @@ class SAGAN():
         self.d_optimizer.load_state_dict(checkpoint["disc_optimizer"])
 
         # load losses
-        self.ave_d_loss = checkpoint["ave_d_loss"]
-        self.ave_dr_loss = checkpoint["ave_dr_loss"]
-        self.ave_g_loss = checkpoint["ave_g_loss"]
+        self.ave_d_losses = checkpoint["ave_d_losses"]
+        self.ave_d_losses_real = checkpoint["ave_d_losses_real"]
+        self.ave_d_losses_fake = checkpoint["ave_d_losses_fake"]
+        self.ave_d_gamma1 = checkpoint["ave_d_gamma1"]
+        self.ave_d_gamma2 = checkpoint["ave_d_gamma2"]
+
+        self.ave_g_losses = checkpoint["ave_g_losses"]
         self.ave_g_gamma1 = checkpoint["ave_g_gamma1"]
-        self.ave_g_gamma2 = checkpoint["ave_g_gamma2"]
-        self.ave_d_ganma1 = checkpoint["ave_d_ganma1"]
         self.ave_g_gamma2 = checkpoint["ave_g_gamma2"]
 
         print("Loading pretrained models (epoch: {})..!".format(
@@ -118,7 +124,7 @@ class SAGAN():
               format(epochs, self.total_steps, step_per_epoch))
 
         if self.pretrained_model:
-            start_epoch = self.pretrained_model + 1
+            start_epoch = self.pretrained_model
         else:
             start_epoch = 0
 
@@ -126,14 +132,15 @@ class SAGAN():
         start_time = time.time()
         for epoch in range(start_epoch, epochs):
             # local losses
-            d_loss = []
-            dr_loss = []
-            df_loss = []
-            g_loss = []
-            g_gamma1 = []
-            g_gamma2 = []
+            d_losses = []
+            d_losses_real = []
+            d_losses_fake = []
             d_gamma1 = []
             d_gamma2 = []
+
+            g_losses = []
+            g_gamma1 = []
+            g_gamma2 = []
 
             data_iter = iter(self.dataloader)
             for step in range(step_per_epoch):
@@ -150,19 +157,24 @@ class SAGAN():
                 for _ in range(self.d_iters):
                     self.reset_grad()
 
-                    # TRAIN REAL & FAKE IMAGES
+                    # TRAIN REAL
                     # get D output for real images
                     d_real = self.D(real_images)
+                    # compute hinge loss of D with real images
+                    d_loss_real = loss_hinge_dis_real(d_real)
+                    d_loss_real.backward()
 
+                    # TRAIN FAKE
                     # generate fake images and get D output for fake images
                     z = tensor2var(torch.randn(real_images.size(0), self.nz))
                     fake_images = self.G(z)
+                    # get D output for fake images
                     d_fake = self.D(fake_images)
+                    # compute hinge loss of D with fake images
+                    d_loss_fake = loss_hinge_dis_fake(d_fake)
+                    d_loss_fake.backward()
 
-                    # compute hinge loss of D
-                    d_loss_real, d_loss_fake = loss_hinge_dis(d_real, d_fake)
                     d_loss = d_loss_real + d_loss_fake
-                    d_loss.backward()
 
                 # optimize D
                 self.d_optimizer.step()
@@ -180,21 +192,50 @@ class SAGAN():
                     g_fake = self.D(fake_images)
 
                     # compute hinge loss for G
-                    g_loss_fake = loss_hinge_gen(g_fake)
-                    g_loss_fake.backward()
+                    g_loss = loss_hinge_gen(g_fake)
+                    g_loss.backward()
 
                 self.g_optimizer.step()
 
-            if (step+1) % self.log_step == 0:
-                elapsed = time.time() - start_time
-                elapsed = str(datetime.timedelta(seconds=elapsed))
-                print("Elapsed [{}], Epoch: [{}/{}], G_step [{}/{}], D_step[{}/{}], d_loss_real: {:.4f}, "
-                      " d_loss_fake: {:.4f}, d_loss: {:.4f}, g_loss_fake: {:.4f}, g_loss".
-                      format(elapsed, epoch+1, epochs, (step + 1), self.total_steps, (step + 1),
-                             self.total_steps, d_loss_real,
-                             d_loss_fake, g_loss_fake))
-                # print(self.G.attn1.gamma)
-                # print(self.G.attn2.gamma)
+                # logging step progression
+                if (step+1) % self.log_step == 0:
+                    # logging losses and attention
+                    d_losses.append(d_loss.item())
+                    d_losses_real.append(d_loss_real.item())
+                    d_losses_fake.append(d_loss_fake.item())
+                    d_gamma1.append(self.D.attn1.gamma.data.item())
+                    d_gamma2.append(self.D.attn2.gamma.data.item())
+
+                    g_losses.append(g_loss.item())
+                    g_gamma1.append(self.G.attn1.gamma.data.item())
+                    g_gamma2.append(self.G.attn2.gamma.data.item())
+
+                    # print out
+                    elapsed = time.time() - start_time
+                    elapsed = str(datetime.timedelta(seconds=elapsed))
+                    print("Elapsed [{}], Epoch: [{}/{}], Step [{}/{}], g_loss: {:.4f}, d_loss: {:.4f},"
+                          " d_loss_real: {:.4f}, d_loss_fake: {:.4f}".
+                          format(elapsed, epoch+1, epochs, (step + 1), step_per_epoch,
+                                 g_loss, d_loss, d_loss_real, d_loss_fake))
+
+            # logging average losses over epoch
+            self.ave_d_losses.append(mean(d_losses))
+            self.ave_d_losses_real.append(mean(d_losses_real))
+            self.ave_d_losses_fake.append(mean(d_losses_fake))
+            self.ave_d_gamma1.append(mean(d_gamma1))
+            self.ave_d_gamma2.append(mean(d_gamma2))
+
+            self.ave_g_losses.append(mean(g_losses))
+            self.ave_g_gamma1.append(mean(g_gamma1))
+            self.ave_g_gamma2.append(mean(g_gamma2))
+
+            # epoch update
+            print("Elapsed [{}], Epoch: [{}/{}], ave_g_loss: {:.4f}, ave_d_loss: {:.4f},"
+                  " ave_d_loss_real: {:.4f}, ave_d_loss_fake: {:.4f},"
+                  " ave_g_gamma1: {:.4f}, ave_g_gamma2: {:.4f}, ave_d_gamma1: {:.4f}, ave_d_gamma2: {:.4f}".
+                  format(elapsed, epoch+1, epochs, self.ave_g_losses[epoch], self.ave_d_losses[epoch],
+                         self.ave_d_losses_real[epoch], self.ave_d_losses_fake[epoch],
+                         self.ave_g_gamma1[epoch], self.ave_g_gamma2[epoch], self.ave_d_gamma1[epoch], self.ave_d_gamma2[epoch]))
 
             # sample images every epoch
             fake_images = self.G(fixed_z)
@@ -203,20 +244,21 @@ class SAGAN():
                        os.path.join(self.sample_path,
                                     "Epoch {}.png".format(epoch+1)))
 
-            # save model every epoch
-            torch.save({
-                "gen_state_dict": self.G.state_dict(),
-                "disc_state_dict": self.D.state_dict(),
-                "gen_optimizer": self.g_optimizer.state_dict(),
-                "disc_optimizer": self.d_optimizer.state_dict(),
-                "ave_d_loss": self.ave_d_loss,
-                "ave_dr_loss": self.ave_dr_loss,
-                "ave_df_loss": self.ave_df_loss,
-                "ave_g_loss": self.ave_g_loss,
-                "ave_g_gamma1": self.ave_g_gamma1,
-                "ave_g_gamma2": self.ave_g_gamma2,
-                "ave_d_ganma1": self.ave_d_ganma1,
-                "ave_g_gamma2": self.ave_g_gamma2
-            }, os.path.join(self.model_path, "{}_sagan.pth".format(epoch+1)))
+            # save model
+            if (epoch+1) % self.save_epoch == 0:
+                torch.save({
+                    "gen_state_dict": self.G.state_dict(),
+                    "disc_state_dict": self.D.state_dict(),
+                    "gen_optimizer": self.g_optimizer.state_dict(),
+                    "disc_optimizer": self.d_optimizer.state_dict(),
+                    "ave_d_losses": self.ave_d_losses,
+                    "ave_d_losses_real": self.ave_d_losses_real,
+                    "ave_d_losses_fake": self.ave_d_losses_fake,
+                    "ave_d_gamma1": self.ave_d_gamma1,
+                    "ave_d_gamma2": self.ave_d_gamma2,
+                    "ave_g_losses": self.ave_g_losses,
+                    "ave_g_gamma1": self.ave_g_gamma1,
+                    "ave_g_gamma2": self.ave_g_gamma2
+                }, os.path.join(self.model_path, "{}_sagan.pth".format(epoch+1)))
 
-            print("Saving models (epoch {})..!".format(epoch+1))
+                print("Saving models (epoch {})..!".format(epoch+1))

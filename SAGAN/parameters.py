@@ -10,7 +10,7 @@ def get_parameters():
     # number of workers for dataloader
     parser.add_argument('--num_workers', type=int, default=2)
     # batch size for training
-    parser.add_argument('--batch_size', type=int, default=8)
+    parser.add_argument('--batch_size', type=int, default=32)
     # spatial size of training images
     parser.add_argument('--imsize', type=int, default=64)
     # channels of training images
@@ -22,9 +22,9 @@ def get_parameters():
     # size of feature maps in disc
     parser.add_argument('--ndf', type=int, default=64)
     # number of training epochs
-    parser.add_argument('--total_steps', type=int, default=1000000)
+    parser.add_argument('--total_steps', type=int, default=20000)
     # disc iterations
-    parser.add_argument('--d_iters', type=int, default=5)
+    parser.add_argument('--d_iters', type=int, default=1)
     # gen iterations
     parser.add_argument('--g_iters', type=int, default=1)
     # gen learning rate
@@ -47,6 +47,10 @@ def get_parameters():
     parser.add_argument('--visualize', type=bool, default=False)
 
     # STEPS
-    parser.add_argument('--log_step', int=int, default=10)
+    parser.add_argument('--log_step', type=int, default=20)
+    parser.add_argument('--save_epoch', type=int, default=3)
+
+    # PRETRAIN
+    parser.add_argument('--pretrained_model', type=int, default=None)
 
     return parser.parse_args()

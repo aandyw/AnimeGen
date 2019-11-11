@@ -98,17 +98,22 @@ class SelfAttn(nn.Module):
 ##################################################################################
 # Loss Functions
 ##################################################################################
-def loss_hinge_dis(d_real, d_fake):
-    """Hinge loss for discriminator"""
+def loss_hinge_dis_real(d_real):
+    """Hinge loss for discriminator with real outputs"""
     d_loss_real = torch.mean(F.relu(1.0 - d_real))
+    return d_loss_real
+
+
+def loss_hinge_dis_fake(d_fake):
+    """Hinge loss for discriminator with fake outputs"""
     d_loss_fake = torch.mean(F.relu(1.0 + d_fake))
-    return d_loss_real, d_loss_fake
+    return d_loss_fake
 
 
 def loss_hinge_gen(d_fake):
     """Hinge loss for generator"""
-    g_loss_fake = -torch.mean(d_fake)
-    return g_loss_fake
+    g_loss = -torch.mean(d_fake)
+    return g_loss
 
 
 ##################################################################################
