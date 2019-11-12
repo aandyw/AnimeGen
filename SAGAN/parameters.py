@@ -37,13 +37,13 @@ def get_parameters():
     parser.add_argument('--beta1', type=float, default=0.0)
     parser.add_argument('--beta2', type=float, default=0.9)
 
-    parser.add_argument('--train', type=bool, default=True)
-    parser.add_argument('--plot', type=bool, default=False)
+    parser.add_argument('--train', type=bool, default=False)
+    parser.add_argument('--plot', type=bool, default=True)
 
     # PATHS
     parser.add_argument('--image_path', type=str, default="../data")
-    parser.add_argument('--model_path', type=str, default="./models")
-    parser.add_argument('--sample_path', type=str, default="./samples")
+    parser.add_argument('--model_path', type=str, default="./models_v2")
+    parser.add_argument('--sample_path', type=str, default="./samples_v2")
 
     # DATA
     parser.add_argument('--visualize', type=bool, default=False)
@@ -53,6 +53,6 @@ def get_parameters():
     parser.add_argument('--save_epoch', type=int, default=10)
 
     # PRETRAIN
-    parser.add_argument('--pretrained_model', type=int, default=222)
+    parser.add_argument('--pretrained_model', type=int, default=220)
 
     return parser.parse_args()
