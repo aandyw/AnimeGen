@@ -63,6 +63,7 @@ class SelfAttn(nn.Module):
         self.f = conv1x1(channels, k)
         self.g = conv1x1(channels, k)
         self.h = conv1x1(channels, channels)
+        self.v = conv1x1(channels, channels)
         self.gamma = nn.Parameter(torch.zeros(1))  # y = γo + x
 
         # softmax for matmul of f(x) & g(x)
@@ -89,7 +90,7 @@ class SelfAttn(nn.Module):
         beta = self.softmax(transpose).permute(0, 2, 1)  # b*n*n
 
         out = torch.bmm(h, beta)
-        out = out.view(b, c, width, height)
+        out = self.v(out.view(b, c, width, height))
 
         out = self.gamma*out + x
         return out

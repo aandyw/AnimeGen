@@ -2,6 +2,7 @@ import os
 import time
 import datetime
 import numpy as np
+import matplotlib.pyplot as plt
 from statistics import mean
 
 import torch
@@ -263,4 +264,9 @@ class SAGAN():
                 print("Saving models (epoch {})..!".format(epoch+1))
 
     def plot(self):
-        pass
+        plt.plot(self.ave_d_losses)
+        plt.plot(self.ave_d_losses_real)
+        plt.plot(self.ave_d_losses_fake)
+        plt.plot(self.ave_g_losses)
+        plt.legend(["d loss", "d real", "d fake", "g loss"], loc="upper left")
+        plt.show()

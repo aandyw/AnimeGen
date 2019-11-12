@@ -29,7 +29,7 @@ class Generator(nn.Module):
         # 100 -> 512
         layer1.append(spectral_norm(deconv(z_dim, output_dim, kernel_size=4)))
         layer1.append(batch_norm(output_dim))
-        layer1.append(relu())
+        layer1.append(lrelu())
 
         # layer 2
         input_dim = output_dim
@@ -39,7 +39,7 @@ class Generator(nn.Module):
         layer2.append(spectral_norm(
             deconv(input_dim, output_dim, kernel_size=4, stride=2, padding=1)))
         layer2.append(batch_norm(output_dim))
-        layer2.append(relu())
+        layer2.append(lrelu())
 
         # layer 3
         input_dim = output_dim
@@ -49,7 +49,7 @@ class Generator(nn.Module):
         layer3.append(spectral_norm(
             deconv(input_dim, output_dim, kernel_size=4, stride=2, padding=1)))
         layer3.append(batch_norm(output_dim))
-        layer3.append(relu())
+        layer3.append(lrelu())
 
         # layer 4
         input_dim = output_dim
@@ -59,7 +59,7 @@ class Generator(nn.Module):
         layer4.append(spectral_norm(
             deconv(input_dim, output_dim, kernel_size=4, stride=2, padding=1)))
         layer4.append(batch_norm(output_dim))
-        layer4.append(relu())
+        layer4.append(lrelu())
 
         # output layer
         input_dim = output_dim
