@@ -1,4 +1,4 @@
-# Anime_GAN
+# AnimeLabs
 An attempt to generate industry-standard facial images for anime characters using Generative Adversarial Networks
 
 ## Features
