@@ -2,9 +2,9 @@
 An attempt to generate industry-standard facial images for anime characters using Generative Adversarial Networks
 
 ## Features
-- [x] Self Attention Module + hinge loss
+- [x] [Self Attention Module](https://arxiv.org/abs/1805.08318) + hinge loss
 - [x] Conditional Batch Normalization
-- [x] [Big GAN](https://arxiv.org/pdf/1809.11096.pdf) + residual blocks
+- [x] [Big GAN](https://arxiv.org/abs/1809.11096) + residual blocks
 - [x] Instance Noise
 - [ ] BCE Loss
 
