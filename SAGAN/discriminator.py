@@ -12,7 +12,7 @@ from layers import SelfAttn
 class Discriminator(nn.Module):
     """SAGAN Discriminator"""
 
-    def __init__(self, batch_size=64, image_size=64, conv_dim=64):
+    def __init__(self, conv_dim=64):
         super(Discriminator, self).__init__()
 
         layer1 = []

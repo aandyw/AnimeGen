@@ -48,7 +48,7 @@ class SAGAN():
         # building
         self.build_model()
 
-        # archieve of all losses
+        # archive of all losses
         self.ave_d_losses = []
         self.ave_d_losses_real = []
         self.ave_d_losses_fake = []
@@ -64,9 +64,8 @@ class SAGAN():
 
     def build_model(self):
         # initialize Generator and Discriminator
-        self.G = Generator(self.batch_size, self.imsize,
-                           self.nz, self.ngf).cuda()
-        self.D = Discriminator(self.batch_size, self.imsize, self.ndf).cuda()
+        self.G = Generator(self.nz, self.ngf).cuda()
+        self.D = Discriminator(self.ndf).cuda()
 
         # optimizers
         self.g_optimizer = optim.Adam(filter(
@@ -76,7 +75,6 @@ class SAGAN():
 
         print("Generator Parameters: ", parameters(self.G))
         print(self.G)
-        print()
         print("Discriminator Parameters: ", parameters(self.D))
         print(self.D)
 

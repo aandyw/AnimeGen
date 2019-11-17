@@ -31,19 +31,17 @@ def get_parameters():
     parser.add_argument('--g_lr', type=float, default=0.0001)
     # disc learning rate
     parser.add_argument('--d_lr', type=float, default=0.0004)
-    # learning rate decay
-    parser.add_argument('--lr_decay', type=float, default=0.95)
     # beta hyperparams for optimizers
     parser.add_argument('--beta1', type=float, default=0.0)
     parser.add_argument('--beta2', type=float, default=0.9)
 
-    parser.add_argument('--train', type=bool, default=False)
-    parser.add_argument('--plot', type=bool, default=True)
+    parser.add_argument('--train', type=bool, default=True)
+    parser.add_argument('--plot', type=bool, default=False)
 
     # PATHS
     parser.add_argument('--image_path', type=str, default="../data")
-    parser.add_argument('--model_path', type=str, default="./models_v2")
-    parser.add_argument('--sample_path', type=str, default="./samples_v2")
+    parser.add_argument('--model_path', type=str, default="./models")
+    parser.add_argument('--sample_path', type=str, default="./samples")
 
     # DATA
     parser.add_argument('--visualize', type=bool, default=False)
@@ -53,6 +51,6 @@ def get_parameters():
     parser.add_argument('--save_epoch', type=int, default=10)
 
     # PRETRAIN
-    parser.add_argument('--pretrained_model', type=int, default=220)
+    parser.add_argument('--pretrained_model', type=int, default=None)
 
     return parser.parse_args()

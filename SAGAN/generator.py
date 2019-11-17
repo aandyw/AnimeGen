@@ -12,7 +12,7 @@ from layers import SelfAttn
 class Generator(nn.Module):
     """SAGAN Generator"""
 
-    def __init__(self, batch_size, image_size=64, z_dim=100, conv_dim=64):
+    def __init__(self, z_dim=100, conv_dim=64):
         super(Generator, self).__init__()
 
         layer1 = []
