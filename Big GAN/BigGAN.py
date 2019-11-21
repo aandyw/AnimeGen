@@ -282,3 +282,11 @@ class BigGAN():
                 }, os.path.join(self.model_path, "{}_biggan.pth".format(epoch+1)))
 
                 print("Saving models (epoch {})..!".format(epoch+1))
+
+    def plot(self):
+        plt.plot(self.ave_d_losses)
+        plt.plot(self.ave_d_losses_real)
+        plt.plot(self.ave_d_losses_fake)
+        plt.plot(self.ave_g_losses)
+        plt.legend(["d loss", "d real", "d fake", "g loss"], loc="upper left")
+        plt.show()
