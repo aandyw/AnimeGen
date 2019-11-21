@@ -2,9 +2,11 @@
 An attempt to generate industry-standard facial images for anime characters using Generative Adversarial Networks
 
 ## Features
-- [x] Self Attention Module + hinge loss
-- [ ] Conditional Batch Normalization
-- [ ] Big GAN + residual blocks
+- [x] [Self Attention Module](https://arxiv.org/abs/1805.08318) + hinge loss
+- [x] Conditional Batch Normalization
+- [x] [Big GAN](https://arxiv.org/abs/1809.11096) + residual blocks
+- [x] Instance Noise
+- [ ] BCE Loss
 
 ## Results
 **SAGAN V2 Epoch 217**  
@@ -22,3 +24,7 @@ An attempt to generate industry-standard facial images for anime characters usin
 - Python 3.7.3
 - Pytorch 1.2.0
 - Numpy 1.17.2
+
+## Todo
+- [ ] Tagging Data
+- [ ] Get Big GAN to work?
