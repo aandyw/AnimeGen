@@ -38,10 +38,16 @@ def get_parameters():
     parser.add_argument('--train', type=bool, default=True)
     parser.add_argument('--plot', type=bool, default=False)
 
+    # INSTANCE NOISE
+    # https://github.com/soumith/ganhacks/issues/14#issuecomment-312509518
+    # https://www.inference.vc/instance-noise-a-trick-for-stabilising-gan-training/
+    parser.add_argument('--inst_noise_sigma', type=float, default=0.0)
+    parser.add_argument('--inst_noise_sigma_iters', type=int, default=2000)
+
     # PATHS
     parser.add_argument('--image_path', type=str, default="../data")
-    parser.add_argument('--model_path', type=str, default="./models")
-    parser.add_argument('--sample_path', type=str, default="./samples")
+    parser.add_argument('--model_path', type=str, default="./models_v3")
+    parser.add_argument('--sample_path', type=str, default="./samples_v3")
 
     # DATA
     parser.add_argument('--visualize', type=bool, default=False)

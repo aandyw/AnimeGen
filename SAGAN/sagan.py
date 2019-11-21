@@ -36,6 +36,10 @@ class SAGAN():
         self.beta1 = configs.beta1
         self.beta2 = configs.beta2
 
+        # instance noise
+        self.inst_noise_sigma = configs.inst_noise_sigma
+        self.inst_noise_sigma_iters = configs.inst_noise_sigma_iters
+
         # model logging and saving
         self.log_step = configs.log_step
         self.save_epoch = configs.save_epoch
@@ -64,7 +68,7 @@ class SAGAN():
 
     def build_model(self):
         # initialize Generator and Discriminator
-        self.G = Generator(self.nz, self.ngf).cuda()
+        self.G = Generator(self.imsize, self.nz, self.ngf).cuda()
         self.D = Discriminator(self.ndf).cuda()
 
         # optimizers
@@ -126,6 +130,16 @@ class SAGAN():
         else:
             start_epoch = 0
 
+        # train layers
+        self.D.train()
+        self.G.train()
+
+        # Instance noise - make random noise mean (0) and std for injecting
+        inst_noise_mean = torch.full(
+            (self.batch_size, 3, self.imsize, self.imsize), 0).cuda()
+        inst_noise_std = torch.full(
+            (self.batch_size, 3, self.imsize, self.imsize), self.inst_noise_sigma).cuda()
+
         # total time
         start_time = time.time()
         for epoch in range(start_epoch, epochs):
@@ -142,9 +156,10 @@ class SAGAN():
 
             data_iter = iter(self.dataloader)
             for step in range(step_per_epoch):
-                # train layers
-                self.D.train()
-                self.G.train()
+                # Instance noise std is linearly annealed from self.inst_noise_sigma to 0 thru self.inst_noise_sigma_iters
+                inst_noise_sigma_curr = 0 if step > self.inst_noise_sigma_iters else (
+                    1 - step/self.inst_noise_sigma_iters)*self.inst_noise_sigma
+                inst_noise_std.fill_(inst_noise_sigma_curr)
 
                 # get real images
                 real_images, _ = next(data_iter)
@@ -156,8 +171,11 @@ class SAGAN():
                     self.reset_grad()
 
                     # TRAIN REAL
-                    # get D output for real images
-                    d_real = self.D(real_images)
+                    # creating instance noise
+                    inst_noise = torch.normal(
+                        mean=inst_noise_mean, std=inst_noise_std).cuda()
+                    # get D output for real images + noise
+                    d_real = self.D(real_images + inst_noise)
                     # compute hinge loss of D with real images
                     d_loss_real = loss_hinge_dis_real(d_real)
                     d_loss_real.backward()
@@ -166,8 +184,13 @@ class SAGAN():
                     # generate fake images and get D output for fake images
                     z = tensor2var(torch.randn(real_images.size(0), self.nz))
                     fake_images = self.G(z)
+
+                    # creating instance noise
+                    inst_noise = torch.normal(
+                        mean=inst_noise_mean, std=inst_noise_std).cuda()
+                    # adding noise to fake images
                     # get D output for fake images
-                    d_fake = self.D(fake_images)
+                    d_fake = self.D(fake_images + inst_noise)
                     # compute hinge loss of D with fake images
                     d_loss_fake = loss_hinge_dis_fake(d_fake)
                     d_loss_fake.backward()
@@ -185,9 +208,11 @@ class SAGAN():
                     # create new latent vector
                     z = tensor2var(torch.randn(real_images.size(0), self.nz))
 
+                    inst_noise = torch.normal(
+                        mean=inst_noise_mean, std=inst_noise_std).cuda()
                     # generate fake images
                     fake_images = self.G(z)
-                    g_fake = self.D(fake_images)
+                    g_fake = self.D(fake_images + inst_noise)
 
                     # compute hinge loss for G
                     g_loss = loss_hinge_gen(g_fake)
