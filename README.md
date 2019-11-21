@@ -26,6 +26,6 @@ An attempt to generate industry-standard facial images for anime characters usin
 - Numpy 1.17.2
 
 ## Todo
-- [ ] Tensorboard modeling
+- [ ] Tensorboard visualization
 - [ ] Tagging Data
 - [ ] Get Big GAN to work?
