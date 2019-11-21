@@ -7,9 +7,14 @@ import torch.nn.functional as F
 # Layers
 ##################################################################################
 
+def init_weights(m):
+    if type(m) == nn.Conv2d or type(m) == nn.Linear or type(m) == nn.Embedding:
+        nn.init.orthogonal_(m.weight, gain=1)
+
+
 # conv 3x3 layer for nn
-def conv3x3(input_size, output_size):
-    return nn.Conv2d(input_size, output_size,
+def conv3x3(in_channels, out_channels):
+    return nn.Conv2d(in_channels, out_channels,
                      kernel_size=3, stride=1, padding=1, bias=True)
 
 
@@ -32,16 +37,11 @@ def conv1x1(in_channels, out_channels):
 
 
 def linear(in_features, out_features):
-    return nn.Linear(in_features, out_features, bias=True)
+    return nn.Linear(in_features, out_features)
 
 
 def embedding(num_embeddings, embedding_dim):
     return nn.Embedding(num_embeddings, embedding_dim)
-
-
-def init_weights(m):
-    if type(m) == nn.Conv2d or type(m) == nn.Linear or type(m) == nn.Embedding:
-        nn.init.orthogonal_(m.weight, gain=1)
 
 
 ##################################################################################
@@ -184,7 +184,7 @@ class ResidualBlock_G(nn.Module):
 class ResidualBlock_D(nn.Module):
     def __init__(self, in_channels, out_channels):
         super(ResidualBlock_D, self).__init__()
-        self.lrelu = relu(negative_slope=0.2, inplace=True)
+        self.lrelu = lrelu(negative_slope=0.2, inplace=True)
         self.conv3x3_1 = spectral_norm(conv3x3(in_channels, out_channels))
         self.conv3x3_2 = spectral_norm(conv3x3(out_channels, out_channels))
         self.downsample = nn.AvgPool2d(kernel_size=2, stride=2)
@@ -236,10 +236,10 @@ def parameters(network):
     return sum(params)
 
 
-def tensor2var(x, grad=False):
+def tensor2var(x, device, grad=False):
     """Tensor to Variable"""
     if torch.cuda.is_available():
-        x = x.cuda()
+        x = x.to(device)
     return torch.autograd.Variable(x, requires_grad=grad)
 
 

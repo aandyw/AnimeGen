@@ -55,7 +55,7 @@ def main(configs):
     num_classes = len(torch.from_numpy(np.unique(real_labels)))
 
     # using Big GAN model
-    model = BigGAN(dataloader, num_classes, configs)
+    model = BigGAN(device, dataloader, num_classes, configs)
     if configs.train:
         model.train()
 

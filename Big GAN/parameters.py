@@ -11,7 +11,7 @@ def get_parameters():
     # number of workers for dataloader
     parser.add_argument('--num_workers', type=int, default=2)
     # batch size for training
-    parser.add_argument('--batch_size', type=int, default=32)
+    parser.add_argument('--batch_size', type=int, default=4)
     # spatial size of training images
     parser.add_argument('--imsize', type=int, default=128)
     # channels of training images
@@ -37,7 +37,7 @@ def get_parameters():
     parser.add_argument('--beta1', type=float, default=0.0)
     parser.add_argument('--beta2', type=float, default=0.999)
 
-    parser.add_argument('--train', type=bool, default=False)
+    parser.add_argument('--train', type=bool, default=True)
     parser.add_argument('--plot', type=bool, default=False)
 
     # INSTANCE NOISE

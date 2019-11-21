@@ -19,8 +19,8 @@ from discriminator import Discriminator
 class BigGAN():
     """Big GAN"""
 
-    def __init__(self, dataloader, num_classes, configs):
-
+    def __init__(self, device, dataloader, num_classes, configs):
+        self.device = device
         self.dataloader = dataloader
         self.num_classes = num_classes
 
@@ -66,8 +66,8 @@ class BigGAN():
 
     def build_model(self):
         """Initiate Generator and Discriminator"""
-        self.G = Generator(self.nz, self.ngf, self.num_classes).cuda()
-        self.D = Discriminator(self.ndf, self.num_classes).cuda()
+        self.G = Generator(self.nz, self.ngf, self.num_classes).to(self.device)
+        self.D = Discriminator(self.ndf, self.num_classes).to(self.device)
 
         self.g_optimizer = optim.Adam(filter(
             lambda p: p.requires_grad, self.G.parameters()), self.g_lr, [self.beta1, self.beta2])
@@ -83,7 +83,7 @@ class BigGAN():
     def load_pretrained(self):
         """Loading pretrained model"""
         checkpoint = torch.load(
-            os.path.join(self.model_path, "{}_sagan.pth".format(
+            os.path.join(self.model_path, "{}_biggan.pth".format(
                 self.pretrained_model)))
 
         # load models
@@ -115,9 +115,10 @@ class BigGAN():
         total_steps = epochs * step_per_epoch
 
         # fixed z and labels for sampling generator images
-        fixed_z = tensor2var(torch.randn(self.batch_size, self.nz))
+        fixed_z = tensor2var(torch.randn(
+            self.batch_size, self.nz), device=self.device)
         fixed_labels = tensor2var(
-            torch.from_numpy(np.arange(self.num_classes)))
+            torch.from_numpy(np.tile(np.arange(self.num_classes), self.batch_size)).long(), device=self.device)
 
         print("Initiating Training")
         print("Epochs: {}, Total Steps: {}, Steps/Epoch: {}".
@@ -133,9 +134,9 @@ class BigGAN():
 
         # Instance noise - make random noise mean (0) and std for injecting
         inst_noise_mean = torch.full(
-            (self.batch_size, 3, self.imsize, self.imsize), 0).cuda()
+            (self.batch_size, 3, self.imsize, self.imsize), 0).to(self.device)
         inst_noise_std = torch.full(
-            (self.batch_size, 3, self.imsize, self.imsize), self.inst_noise_sigma).cuda()
+            (self.batch_size, 3, self.imsize, self.imsize), self.inst_noise_sigma).to(self.device)
 
         # total time
         start_time = time.time()
@@ -155,7 +156,8 @@ class BigGAN():
 
                 # get real images
                 real_images, real_labels = next(data_iter)
-                real_images = real_images.cuda()
+                real_images = real_images.to(self.device)
+                real_labels = real_labels.to(self.device)
 
                 # ================== TRAIN DISCRIMINATOR ================== #
 
@@ -166,28 +168,37 @@ class BigGAN():
 
                     # creating instance noise
                     inst_noise = torch.normal(
-                        mean=inst_noise_mean, std=inst_noise_std).cuda()
+                        mean=inst_noise_mean, std=inst_noise_std).to(self.device)
                     # adding noise to real images
                     d_real = self.D(real_images + inst_noise, real_labels)
                     d_loss_real = loss_hinge_dis_real(d_real)
                     d_loss_real.backward()
 
+                    # delete loss
+                    if (step+1) % self.log_step != 0:
+                        del d_real, d_loss_real
+
                     # TRAIN FAKE
 
                     # create fake images using latent vector
-                    z = tensor2var(torch.randn(real_images.size(0), self.nz))
+                    z = tensor2var(torch.randn(
+                        real_images.size(0), self.nz), device=self.device)
                     fake_images = self.G(z, real_labels)
 
                     # creating instance noise
                     inst_noise = torch.normal(
-                        mean=inst_noise_mean, std=inst_noise_std).cuda()
+                        mean=inst_noise_mean, std=inst_noise_std).to(self.device)
                     # adding noise to fake images
                     # detach fake_images tensor from graph
-                    d_fake = self.D(fake_images + inst_noise, real_labels)
+                    d_fake = self.D(fake_images.detach() +
+                                    inst_noise, real_labels)
                     d_loss_fake = loss_hinge_dis_fake(d_fake)
                     d_loss_fake.backward()
 
-                    d_loss = d_loss_real + d_loss_fake
+                    # delete loss, output
+                    del fake_images
+                    if (step+1) % self.log_step != 0:
+                        del d_fake, d_loss_fake
 
                 # optimize D
                 self.d_optimizer.step()
@@ -198,11 +209,12 @@ class BigGAN():
                     self.reset_grad()
 
                     # create new latent vector
-                    z = tensor2var(torch.randn(real_images.size(0), self.nz))
+                    z = tensor2var(torch.randn(
+                        real_images.size(0), self.nz), device=self.device)
 
                     # generate fake images
                     inst_noise = torch.normal(
-                        mean=inst_noise_mean, std=inst_noise_std).cuda()
+                        mean=inst_noise_mean, std=inst_noise_std).to(self.device)
                     fake_images = self.G(z, real_labels)
                     g_fake = self.D(fake_images + inst_noise, real_labels)
 
@@ -210,10 +222,17 @@ class BigGAN():
                     g_loss = loss_hinge_gen(g_fake)
                     g_loss.backward()
 
+                    del fake_images
+                    if (step + 1) % self.log_step != 0:
+                        del g_fake, g_loss
+
+                # optimize G
                 self.g_optimizer.step()
 
                 # logging step progression
                 if (step+1) % self.log_step == 0:
+                    d_loss = d_loss_real + d_loss_fake
+
                     # logging losses
                     d_losses.append(d_loss.item())
                     d_losses_real.append(d_loss_real.item())
@@ -227,6 +246,8 @@ class BigGAN():
                           " d_loss_real: {:.4f}, d_loss_fake: {:.4f}".
                           format(elapsed, (epoch+1), epochs, (step + 1), step_per_epoch,
                                  g_loss, d_loss, d_loss_real, d_loss_fake))
+
+                    del d_real, d_loss_real, d_fake, d_loss_fake, g_fake, g_loss
 
             # logging average losses over epoch
             self.ave_d_losses.append(mean(d_losses))
@@ -258,6 +279,6 @@ class BigGAN():
                     "ave_d_losses_real": self.ave_d_losses_real,
                     "ave_d_losses_fake": self.ave_d_losses_fake,
                     "ave_g_losses": self.ave_g_losses
-                }, os.path.join(self.model_path, "{}_sagan.pth".format(epoch+1)))
+                }, os.path.join(self.model_path, "{}_biggan.pth".format(epoch+1)))
 
                 print("Saving models (epoch {})..!".format(epoch+1))
