@@ -6,12 +6,16 @@ An attempt to generate industry-standard facial images for anime characters usin
 - [x] Conditional Batch Normalization
 - [x] [Big GAN](https://arxiv.org/abs/1809.11096) + residual blocks
 - [x] Instance Noise
-- [ ] BCE Loss
+- [X] Tensorboard visualization
 
 ## Results
 **SAGAN V2 Epoch 217**  
 
 ![epoch 217 sagan_v2](https://github.com/Pie31415/Anime_GAN/blob/master/imgs/Epoch%20217.png)
+
+**SAGAN with INSTANCE NOISE**
+
+![sagan inst noise sample](https://github.com/Pie31415/AnimeLabs/blob/master/imgs/sagan_inst_sample.png)
 
 ## Losses
 
@@ -19,6 +23,9 @@ An attempt to generate industry-standard facial images for anime characters usin
 | ------------- |:-------------:| 
 | ![sagan v1 losses](https://github.com/Pie31415/Anime_GAN/blob/master/imgs/sagan.png)     | ![sagan v2 losses](https://github.com/Pie31415/Anime_GAN/blob/master/imgs/sagan_v2.png)| 
 
+**SAGAN with INSTANCE NOISE**
+
+![sagan inst noise losses](https://github.com/Pie31415/AnimeLabs/blob/master/imgs/sagan_inst.png)
 
 ## Prerequisites
 - Python 3.7.3
@@ -26,6 +33,6 @@ An attempt to generate industry-standard facial images for anime characters usin
 - Numpy 1.17.2
 
 ## Todo
-- [ ] Tensorboard visualization
+- [ ] BCE Loss
 - [ ] Tagging Data
 - [ ] Get Big GAN to work?
