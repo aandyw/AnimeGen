@@ -35,8 +35,10 @@ def get_parameters():
     parser.add_argument('--beta1', type=float, default=0.0)
     parser.add_argument('--beta2', type=float, default=0.9)
 
-    parser.add_argument('--train', type=bool, default=True)
+    parser.add_argument('--train', type=bool, default=False)
     parser.add_argument('--plot', type=bool, default=False)
+    parser.add_argument('--test', type=bool, default=True)
+    parser.add_argument('--test_samples', type=int, default=16)
 
     # INSTANCE NOISE
     # https://github.com/soumith/ganhacks/issues/14#issuecomment-312509518
@@ -57,6 +59,6 @@ def get_parameters():
     parser.add_argument('--save_epoch', type=int, default=10)
 
     # PRETRAIN
-    parser.add_argument('--pretrained_model', type=int, default=None)
+    parser.add_argument('--pretrained_model', type=int, default=220)
 
     return parser.parse_args()

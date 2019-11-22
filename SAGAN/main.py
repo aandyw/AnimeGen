@@ -56,6 +56,9 @@ def main(configs):
     if configs.plot:
         model.plot()
 
+    if configs.test:
+        model.sample(configs.test_samples)
+
 
 if __name__ == "__main__":
     configs = get_parameters()

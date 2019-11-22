@@ -9,7 +9,9 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
-from torchvision.utils import save_image
+from torchvision.utils import save_image, make_grid
+from torch.utils.tensorboard import SummaryWriter
+from PIL import Image
 
 from layers import *
 from generator import Generator
@@ -77,6 +79,9 @@ class SAGAN():
         self.d_optimizer = optim.Adam(filter(
             lambda p: p.requires_grad, self.D.parameters()), self.d_lr, [self.beta1, self.beta2])
 
+        # tensorboard writer
+        self.tb = SummaryWriter()
+
         print("Generator Parameters: ", parameters(self.G))
         print(self.G)
         print("Discriminator Parameters: ", parameters(self.D))
@@ -134,12 +139,6 @@ class SAGAN():
         self.D.train()
         self.G.train()
 
-        # Instance noise - make random noise mean (0) and std for injecting
-        inst_noise_mean = torch.full(
-            (self.batch_size, 3, self.imsize, self.imsize), 0).cuda()
-        inst_noise_std = torch.full(
-            (self.batch_size, 3, self.imsize, self.imsize), self.inst_noise_sigma).cuda()
-
         # total time
         start_time = time.time()
         for epoch in range(start_epoch, epochs):
@@ -156,14 +155,20 @@ class SAGAN():
 
             data_iter = iter(self.dataloader)
             for step in range(step_per_epoch):
+                # get real images
+                real_images, _ = next(data_iter)
+                real_images = tensor2var(real_images)
+
+                # Instance noise - make random noise mean (0) and std for injecting
+                inst_noise_mean = torch.full(
+                    (real_images.size(0), 3, self.imsize, self.imsize), 0).cuda()
+                inst_noise_std = torch.full(
+                    (real_images.size(0), 3, self.imsize, self.imsize), self.inst_noise_sigma).cuda()
+
                 # Instance noise std is linearly annealed from self.inst_noise_sigma to 0 thru self.inst_noise_sigma_iters
                 inst_noise_sigma_curr = 0 if step > self.inst_noise_sigma_iters else (
                     1 - step/self.inst_noise_sigma_iters)*self.inst_noise_sigma
                 inst_noise_std.fill_(inst_noise_sigma_curr)
-
-                # get real images
-                real_images, _ = next(data_iter)
-                real_images = tensor2var(real_images)
 
                 # ================== TRAIN DISCRIMINATOR ================== #
 
@@ -252,6 +257,17 @@ class SAGAN():
             self.ave_g_gamma1.append(mean(g_gamma1))
             self.ave_g_gamma2.append(mean(g_gamma2))
 
+            # adding tensorboard logs
+            self.tb.add_scalar("d loss", self.ave_d_losses[epoch], epoch)
+            self.tb.add_scalar('d real', self.ave_d_losses_real[epoch], epoch)
+            self.tb.add_scalar('d fake', self.ave_d_losses_fake[epoch], epoch)
+            self.tb.add_scalar("g loss", self.ave_g_losses[epoch], epoch)
+
+            self.tb.add_scalar("g gamma 1", self.ave_g_gamma1[epoch], epoch)
+            self.tb.add_scalar("g gamma 2", self.ave_g_gamma2[epoch], epoch)
+            self.tb.add_scalar("d gamma 1", self.ave_d_gamma1[epoch], epoch)
+            self.tb.add_scalar("d gamma 2", self.ave_d_gamma2[epoch], epoch)
+
             # epoch update
             print("Elapsed [{}], Epoch: [{}/{}], ave_g_loss: {:.4f}, ave_d_loss: {:.4f},"
                   " ave_d_loss_real: {:.4f}, ave_d_loss_fake: {:.4f},"
@@ -292,4 +308,18 @@ class SAGAN():
         plt.plot(self.ave_d_losses_fake)
         plt.plot(self.ave_g_losses)
         plt.legend(["d loss", "d real", "d fake", "g loss"], loc="upper left")
+        plt.show()
+
+    def sample(self, samples):
+        z = tensor2var(torch.randn(samples, self.nz))
+        images = self.G(z)
+        images = denorm(images.data)
+        # https://pytorch.org/docs/stable/_modules/torchvision/utils.html#save_image
+        grid = make_grid(images, nrow=8, padding=2, pad_value=0,
+                         normalize=False, range=None, scale_each=False)
+        # Add 0.5 after unnormalizing to [0, 255] to round to nearest integer
+        ndarr = grid.mul(255).add_(0.5).clamp_(0, 255).permute(
+            1, 2, 0).to('cpu', torch.uint8).numpy()
+        im = Image.fromarray(ndarr)
+        plt.imshow(im)
         plt.show()
